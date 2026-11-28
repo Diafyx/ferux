@@ -1,0 +1,38 @@
+# Release note categories, grouped by PR label.
+changelog:
+  exclude:
+    labels:
+      - skip-release-notes
+      - duplicate
+      - invalid
+      - wontfix
+  categories:
+    - title: Breaking changes
+      labels:
+        - breaking-change
+    - title: Features
+      labels:
+        - enhancement
+    - title: Fixes
+      labels:
+        - bug
+    - title: Security hardening
+      labels:
+        - security
+    - title: Performance
+      labels:
+        - performance
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Tests
+      labels:
+        - testing
+    - title: Maintenance and dependencies
+      labels:
+        - maintenance
+        - refactor
+        - dependencies
+    - title: Other changes
+      labels:
+        - "*"

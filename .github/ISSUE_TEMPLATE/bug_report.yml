@@ -1,0 +1,73 @@
+name: Bug report
+description: Report something in Ferux that behaves incorrectly.
+title: "bug: "
+labels: ["bug", "needs-triage"]
+type: Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search the existing issues first. Do not use this form for security vulnerabilities: follow the [security policy](https://github.com/Diafyx/ferux/blob/main/SECURITY.md) instead.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong, in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands and actions that lead to the problem.
+      placeholder: |
+        1. cargo xtask run
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Ferux commit or version
+      description: The output of `git rev-parse --short HEAD`, or the release version.
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host operating system
+      description: For example Windows 11 or Ubuntu 24.04.
+    validations:
+      required: true
+  - type: input
+    id: machine
+    attributes:
+      label: QEMU version or hardware
+      description: The output of `qemu-system-x86_64 --version`, or the hardware model if Ferux runs on a real machine.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Serial output, panic reports or build errors.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues and found no report of this problem.
+          required: true

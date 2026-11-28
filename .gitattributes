@@ -1,0 +1,14 @@
+# Store text files with LF line endings
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.bin binary
+*.efi binary
+*.iso binary
+*.img binary

@@ -1,0 +1,46 @@
+# Checks that every commit in a pull request has a Developer Certificate of
+# Origin sign-off that matches the commit author. Merge commits and commits
+# by Dependabot are skipped. It reads commit data through the API and does
+# not check out the pull request.
+name: DCO
+
+on:
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  dco:
+    name: DCO
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Check the sign-off on every commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          missing="$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/commits" --jq '
+            .[]
+            | select((.parents | length) == 1)
+            | select(.author.login != "dependabot[bot]")
+            | ("Signed-off-by: " + .commit.author.name + " <" + .commit.author.email + ">") as $want
+            | select(.commit.message | split("\n") | index($want) | not)
+            | "\(.sha[0:12]) \(.commit.message | split("\n")[0])\n  expected: \($want)"
+          ')"
+          if [ -n "$missing" ]; then
+            echo "::error::Some commits have no sign-off that matches their author."
+            printf '%s\n' "$missing"
+            echo "Sign off with 'git commit --amend --signoff' or 'git rebase --signoff', then push again."
+            exit 1
+          fi
+          echo "Every commit is signed off."

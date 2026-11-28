@@ -1,0 +1,57 @@
+# Sets one size label on each pull request from the number of changed lines.
+# This workflow runs on pull_request_target, so its token can write labels.
+# It only reads pull request metadata through the API. It never checks out,
+# builds or runs pull request code.
+name: PR size
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  size:
+    name: Size label
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Set the size label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # Lockfiles do not count toward the size.
+          changed="$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '
+            [.[] | select(.filename | test("(^|/)Cargo[.]lock$") | not) | .additions + .deletions] | add // 0
+          ' | awk '{ sum += $1 } END { print sum + 0 }')"
+
+          if   [ "$changed" -lt 10 ];   then size="XS"
+          elif [ "$changed" -lt 50 ];   then size="S"
+          elif [ "$changed" -lt 250 ];  then size="M"
+          elif [ "$changed" -lt 500 ];  then size="L"
+          elif [ "$changed" -lt 1000 ]; then size="XL"
+          else                               size="XXL"
+          fi
+          want="size: $size"
+          echo "Changed lines: $changed. Label: $want"
+
+          gh api "repos/$REPO/issues/$PR_NUMBER/labels" --jq '.[].name' |
+            while IFS= read -r label; do
+              case "$label" in
+                "size: "*)
+                  if [ "$label" != "$want" ]; then
+                    gh api --method DELETE "repos/$REPO/issues/$PR_NUMBER/labels/${label// /%20}" > /dev/null
+                  fi
+                  ;;
+              esac
+            done
+          gh api --method POST "repos/$REPO/issues/$PR_NUMBER/labels" -f "labels[]=$want" > /dev/null
